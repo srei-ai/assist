@@ -6,20 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* minimal polish so it feels like an app */
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 40px; line-height: 1.4; }
-    header { display:flex; gap:16px; align-items:center; margin-bottom:24px; }
-    nav a { text-decoration:none; padding:8px 10px; border-radius:8px; }
-    nav a.active { background:#f1f1f1; }
-    main { max-width: 720px; }
-    form { display:flex; gap:8px; margin: 12px 0 16px; }
-    input[type="text"] { flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; }
-    button, .btn { padding:10px 14px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; }
-    ul { list-style:none; padding:0; }
-    li { padding:10px 12px; border:1px solid #eee; border-radius:10px; margin-bottom:8px; }
-    small { color:#666; }
-    .muted { color:#666; }
-  </style>
+  :root{--bg:#ffffff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--card:#ffffff;--primary:#2563eb;--primary-ink:#ffffff;--hover:#f3f4f6}
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0b1220;--text:#e5e7eb;--muted:#9ca3af;--border:#1f2937;--card:#111827;--hover:#111827}
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5}
+  header{position:sticky;top:0;background:rgba(255,255,255,.7);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--border);padding:12px 24px;margin:-24px -24px 24px}
+  @media (prefers-color-scheme: dark){header{background:rgba(11,18,32,.6)}}
+  header nav{display:flex;gap:12px;align-items:center}
+  header strong{margin-right:6px}
+  nav a{display:inline-block;padding:8px 12px;border:1px solid transparent;border-radius:999px;text-decoration:none;color:var(--text)}
+  nav a:hover{background:var(--hover)}
+  nav a.active{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+  main{max-width:800px;margin:0 auto}
+  h1,h2{margin:0 0 12px}
+  .muted{color:var(--muted)}
+  .btn,button{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer}
+  .btn:hover,button:hover{background:var(--hover)}
+  input[type=text]{flex:1;min-width:0;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
+  form{display:flex;gap:8px;margin:12px 0 16px}
+  ul{list-style:none;padding:0;margin:0}
+  li{padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  a:focus,button:focus,input:focus{outline:2px solid var(--primary);outline-offset:2px}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+</style>
 </head>
 <body>
   <header>
