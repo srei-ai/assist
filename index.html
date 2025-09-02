@@ -98,7 +98,7 @@
 
     function renderItem(row, where = 'end') {
       const li = document.createElement('li');
-      const when = new Date(row.inserted_at ?? Date.now()).toLocaleString();
+      const when = new Date(row.created_at ?? Date.now()).toLocaleString();
       li.innerHTML = `<strong>${escapeHtml(row.text)}</strong><br><small>${when}</small>`;
       if (where === 'start') list.prepend(li); else list.appendChild(li);
     }
@@ -110,7 +110,7 @@
     async function loadMessages() {
       const { data, error } = await supa
         .from('messages')
-        .select('id, text, inserted_at')
+        .select('id, text, created_at')
         .order('id', { ascending: false })
         .limit(50);
 
