@@ -6,43 +6,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'https://sqavoppeqygatapxftom.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxYXZvcHBlcXlnYXRhcHhmdG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDczNzUsImV4cCI6MjA2OTg4MzM3NX0.GN9-8Q4wi77VUGeMUXKDyxplMai-J_AzWGtP0Fh6Yqo';
-            
-  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  async function loadMessage() {
-    const el = document.getElementById('from-db');
-
-    const { data, error } = await client
-      .from('messages')
-      .select('text')
-      .order('id', { ascending: true })
-      .limit(1)
-      .single();
-
-    if (error) {
-      el.textContent = 'Error: ' + error.message;
-      return;
-    }
-    el.textContent = data?.text ?? '(no message found)';
-  }
-
-  loadMessage();
-</script>
 <body>
   <h1 id="greet">Hello, Steve!</h1>
-<p id="from-db">Loading from Supabase…</p>
+  <p id="from-db">Loading from Supabase…</p>
   <button id="btn">Change greeting</button>
-<script>
-  const btn = document.getElementById('btn');
-  const greet = document.getElementById('greet');
 
-  btn.addEventListener('click', () => {
-    greet.textContent = 'Hello from the button!';
-  });
-</script>
+  <script>
+    const btn = document.getElementById('btn');
+    const greet = document.getElementById('greet');
+    btn.addEventListener('click', () => {
+      greet.textContent = 'Hello from the button!';
+    });
+  </script>
+
+  <!-- Supabase: load as ES module at the end -->
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = 'https://sqavoppeqygatapxftom.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxYXZvcHBlcXlnYXRhcHhmdG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDczNzUsImV4cCI6MjA2OTg4MzM3NX0.GN9-8Q4wi77VUGeMUXKDyxplMai-J_AzWGtP0Fh6Yqo';
+
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadMessage() {
+      const el = document.getElementById('from-db');
+
+      const { data, error } = await client
+        .from('messages')
+        .select('text')
+        .order('id', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (error) {
+        el.textContent = 'Error: ' + error.message;
+        return;
+      }
+      el.textContent = data?.text ?? '(no message found)';
+    }
+
+    loadMessage();
+  </script>
 </body>
 </html>
