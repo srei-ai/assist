@@ -5,47 +5,144 @@
   <title>Assist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* minimal polish so it feels like an app */
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 40px; line-height: 1.4; }
+    header { display:flex; gap:16px; align-items:center; margin-bottom:24px; }
+    nav a { text-decoration:none; padding:8px 10px; border-radius:8px; }
+    nav a.active { background:#f1f1f1; }
+    main { max-width: 720px; }
+    form { display:flex; gap:8px; margin: 12px 0 16px; }
+    input[type="text"] { flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; }
+    button, .btn { padding:10px 14px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; }
+    ul { list-style:none; padding:0; }
+    li { padding:10px 12px; border:1px solid #eee; border-radius:10px; margin-bottom:8px; }
+    small { color:#666; }
+    .muted { color:#666; }
+  </style>
 </head>
 <body>
-  <h1 id="greet">Hello, Steve!</h1>
-  <p id="from-db">Loading from Supabase…</p>
-  <button id="btn">Change greeting</button>
+  <header>
+    <strong>Assist</strong>
+    <nav>
+      <a href="#home" id="link-home">Home</a>
+      <a href="#messages" id="link-messages">Messages</a>
+      <a href="#account" id="link-account">Account</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" data-page>
+      <h1 id="greet">Hello, Steve!</h1>
+      <p id="from-db" class="muted">Loading from Supabase…</p>
+      <button id="btn" class="btn">Change greeting</button>
+    </section>
+
+    <section id="messages" data-page hidden>
+      <h2>Messages</h2>
+      <form id="msg-form" autocomplete="off">
+        <input id="msg-input" type="text" placeholder="Write a message…" required />
+        <button class="btn" type="submit">Post</button>
+      </form>
+      <ul id="msg-list">
+        <li class="muted">Loading messages…</li>
+      </ul>
+      <p class="muted"><small>Realtime on: new messages appear instantly.</small></p>
+    </section>
+
+    <section id="account" data-page hidden>
+      <h2>Account</h2>
+      <p class="muted">Auth coming later. For now this is open demo data.</p>
+    </section>
+  </main>
 
   <script>
+    // Small router: show section that matches the hash (#home, #messages, #account)
+    function showPage() {
+      const hash = location.hash.replace('#', '') || 'home';
+      document.querySelectorAll('[data-page]').forEach(sec => { sec.hidden = sec.id !== hash; });
+      document.querySelectorAll('nav a').forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + hash); });
+    }
+    window.addEventListener('hashchange', showPage);
+    showPage();
+
+    // Tiny interaction from earlier
     const btn = document.getElementById('btn');
     const greet = document.getElementById('greet');
-    btn.addEventListener('click', () => {
-      greet.textContent = 'Hello from the button!';
-    });
+    if (btn) btn.addEventListener('click', () => { greet.textContent = 'Hello from the button!'; });
   </script>
 
-  <!-- Supabase: load as ES module at the end -->
+  <!-- Supabase: load via ESM at the end so DOM exists -->
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+    // Your existing project details (anon key is safe for browser use with RLS)
     const SUPABASE_URL = 'https://sqavoppeqygatapxftom.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxYXZvcHBlcXlnYXRhcHhmdG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMDczNzUsImV4cCI6MjA2OTg4MzM3NX0.GN9-8Q4wi77VUGeMUXKDyxplMai-J_AzWGtP0Fh6Yqo';
 
-    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadMessage() {
+    // HOME: show one message in the intro paragraph (old demo)
+    async function loadIntro() {
       const el = document.getElementById('from-db');
+      if (!el) return;
+      const { data, error } = await supa.from('messages').select('text').order('id', { ascending: true }).limit(1).single();
+      el.textContent = error ? ('Error: ' + error.message) : (data?.text ?? '(no message found)');
+    }
+    loadIntro();
 
-      const { data, error } = await client
-        .from('messages')
-        .select('text')
-        .order('id', { ascending: true })
-        .limit(1)
-        .single();
+    // MESSAGES: list latest, post new, subscribe realtime
+    const list = document.getElementById('msg-list');
+    const form = document.getElementById('msg-form');
+    const input = document.getElementById('msg-input');
 
-      if (error) {
-        el.textContent = 'Error: ' + error.message;
-        return;
-      }
-      el.textContent = data?.text ?? '(no message found)';
+    function renderItem(row, where = 'end') {
+      const li = document.createElement('li');
+      const when = new Date(row.inserted_at ?? Date.now()).toLocaleString();
+      li.innerHTML = `<strong>${escapeHtml(row.text)}</strong><br><small>${when}</small>`;
+      if (where === 'start') list.prepend(li); else list.appendChild(li);
     }
 
-    loadMessage();
+    function escapeHtml(s = '') {
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    async function loadMessages() {
+      const { data, error } = await supa
+        .from('messages')
+        .select('id, text, inserted_at')
+        .order('id', { ascending: false })
+        .limit(50);
+
+      list.innerHTML = '';
+      if (error) { list.innerHTML = `<li>Error: ${escapeHtml(error.message)}</li>`; return; }
+      if (!data || data.length === 0) { list.innerHTML = '<li class="muted">No messages yet.</li>'; return; }
+      data.forEach(row => renderItem(row));
+    }
+
+    await loadMessages();
+
+    // Post a new message (open insert policy required)
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = (input?.value ?? '').trim();
+      if (!text) return;
+      const { error } = await supa.from('messages').insert({ text });
+      if (error) {
+        alert('Insert failed: ' + error.message);
+        return;
+      }
+      input.value = '';
+      // We rely on realtime to show it instantly; as fallback we could prepend here too
+    });
+
+    // Realtime subscription for new messages
+    supa
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        renderItem(payload.new, 'start');
+      })
+      .subscribe();
   </script>
 </body>
 </html>
