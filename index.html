@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, Steve!</h1>
+  <h1 id="greet">Hello, Steve!</h1>
+  <button id="btn">Change greeting</button>
+<script>
+  const btn = document.getElementById('btn');
+  const greet = document.getElementById('greet');
+
+  btn.addEventListener('click', () => {
+    greet.textContent = 'Hello from the button!';
+  });
+</script>
 </body>
 </html>
